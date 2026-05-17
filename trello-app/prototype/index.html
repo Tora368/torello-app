@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trello風タスク管理アプリ — プロトタイプ</title>
+<style>
+  :root {
+    --bg: #0079bf;
+    --header-bg: rgba(0,0,0,0.2);
+    --list-bg: #ebecf0;
+    --card-bg: #ffffff;
+    --text: #172b4d;
+    --text-muted: #5e6c84;
+    --accent: #0052cc;
+    --danger: #de350b;
+    --danger-hover: #bf2600;
+    --card-shadow: 0 1px 3px rgba(9,30,66,0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── ヘッダー ── */
+  header {
+    background: var(--header-bg);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    color: #fff;
+    font-size: 24px;
+    font-weight: normal;
+    letter-spacing: -0.5px;
+  }
+
+  #board-title {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  #board-title:hover { background: rgba(255,255,255,0.15); }
+
+  #board-title-input {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 2px solid var(--accent);
+    outline: none;
+    display: none;
+  }
+
+  /* ── ボードエリア ── */
+  #board {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    gap: 8px;
+    overflow-x: auto;
+    flex: 1;
+  }
+
+  /* ── リスト列 ── */
+  .list-column {
+    background: var(--list-bg);
+    border-radius: 6px;
+    width: 272px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 80px);
+  }
+
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 6px;
+  }
+
+  .list-title {
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    flex: 1;
+  }
+  .list-title:hover { background: rgba(9,30,66,0.08); }
+
+  .list-title-input {
+    font-size: 14px;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 3px;
+    border: 2px solid var(--accent);
+    outline: none;
+    width: 100%;
+    display: none;
+  }
+
+  .list-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .list-delete-btn:hover { color: var(--danger); background: rgba(222,53,11,0.1); }
+
+  /* ── カード一覧 ── */
+  .cards-container {
+    padding: 0 8px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .cards-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 12px 0;
+    display: none;
+  }
+
+  /* ── カード ── */
+  .card {
+    background: var(--card-bg);
+    border-radius: 4px;
+    box-shadow: var(--card-shadow);
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    position: relative;
+    cursor: grab;
+    transition: box-shadow 0.15s;
+  }
+  .card:hover { box-shadow: 0 4px 8px rgba(9,30,66,0.25); }
+
+  .card-actions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .card:hover .card-actions { opacity: 1; }
+
+  .card-action-btn {
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 13px;
+    line-height: 1.4;
+    transition: background 0.15s;
+  }
+  .card-action-btn:hover { background: #dfe1e6; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    word-break: break-word;
+    padding-right: 48px;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    word-break: break-word;
+    padding-right: 48px;
+  }
+
+  /* ── カード編集フォーム ── */
+  .card-edit-form {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-edit-form input,
+  .card-edit-form textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 6px 8px;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    outline: none;
+    resize: none;
+    width: 100%;
+  }
+
+  .card-edit-form textarea {
+    font-size: 13px;
+    min-height: 60px;
+  }
+
+  .card-edit-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ── カード追加エリア ── */
+  .add-card-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 0 0 6px 6px;
+    transition: background 0.15s, color 0.15s;
+    text-align: left;
+  }
+  .add-card-btn:hover { background: rgba(9,30,66,0.08); color: var(--text); }
+
+  .add-card-form {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 8px 8px;
+  }
+
+  .add-card-form input {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 10px;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    outline: none;
+    width: 100%;
+  }
+
+  .add-card-form textarea {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid #dfe1e6;
+    border-radius: 4px;
+    outline: none;
+    resize: none;
+    min-height: 56px;
+    width: 100%;
+  }
+  .add-card-form textarea:focus { border-color: var(--accent); border-width: 2px; }
+
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* ── ボタン共通 ── */
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #003d99; }
+
+  .btn-cancel {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 20px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .btn-cancel:hover { color: var(--text); background: rgba(9,30,66,0.08); }
+
+  /* ── リスト追加エリア ── */
+  .add-list-wrapper {
+    width: 272px;
+    flex-shrink: 0;
+  }
+
+  .add-list-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .add-list-btn:hover { background: rgba(255,255,255,0.3); }
+
+  .add-list-form {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--list-bg);
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .add-list-form input {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 10px;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    outline: none;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">&#9646;&#9646; TaskBoard</span>
+  <span id="board-title">My Board</span>
+  <input id="board-title-input" type="text" value="My Board">
+</header>
+
+<div id="board">
+  <!-- リストはJSで生成 -->
+  <div class="add-list-wrapper">
+    <button class="add-list-btn" id="show-add-list-btn">&#43; リストを追加</button>
+    <div class="add-list-form" id="add-list-form">
+      <input type="text" id="new-list-title" placeholder="リストのタイトルを入力">
+      <div class="form-actions">
+        <button class="btn-primary" id="confirm-add-list">追加</button>
+        <button class="btn-cancel" id="cancel-add-list">&#x2715;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 初期データ ──
+const initialData = {
+  boardTitle: 'My Board',
+  lists: [
+    {
+      id: 'list-1',
+      title: 'To Do',
+      cards: [
+        { id: 'c-1', title: 'デザイントークンの確認', desc: '画面設計書のカラー・フォント仕様を確認する' },
+        { id: 'c-2', title: 'コンポーネント設計', desc: 'Board / List / Card の構成を決める' },
+        { id: 'c-3', title: 'ドラッグ&ドロップ調査', desc: '@dnd-kit のAPIを確認する' },
+      ]
+    },
+    {
+      id: 'list-2',
+      title: 'In Progress',
+      cards: [
+        { id: 'c-4', title: '要件定義書レビュー', desc: '' },
+        { id: 'c-5', title: 'プロトタイプ作成', desc: 'HTML/CSS/JSで画面イメージを確認する' },
+      ]
+    },
+    {
+      id: 'list-3',
+      title: 'Done',
+      cards: [
+        { id: 'c-6', title: 'プロジェクトセットアップ', desc: 'Vite + React + TypeScript の初期構築' },
+        { id: 'c-7', title: 'ドキュメント分割', desc: '要件定義書を複数ファイルに整理' },
+      ]
+    },
+  ]
+};
+
+let idCounter = 100;
+const newId = () => `id-${++idCounter}`;
+
+// ── DOM参照 ──
+const board = document.getElementById('board');
+const addListWrapper = document.querySelector('.add-list-wrapper');
+const showAddListBtn = document.getElementById('show-add-list-btn');
+const addListForm = document.getElementById('add-list-form');
+const newListTitleInput = document.getElementById('new-list-title');
+const confirmAddListBtn = document.getElementById('confirm-add-list');
+const cancelAddListBtn = document.getElementById('cancel-add-list');
+const boardTitleEl = document.getElementById('board-title');
+const boardTitleInput = document.getElementById('board-title-input');
+
+// ── ボードタイトル編集 ──
+boardTitleEl.addEventListener('click', () => {
+  boardTitleInput.value = boardTitleEl.textContent;
+  boardTitleEl.style.display = 'none';
+  boardTitleInput.style.display = 'inline-block';
+  boardTitleInput.focus();
+  boardTitleInput.select();
+});
+
+function confirmBoardTitle() {
+  const v = boardTitleInput.value.trim();
+  if (v) boardTitleEl.textContent = v;
+  boardTitleInput.style.display = 'none';
+  boardTitleEl.style.display = '';
+}
+
+boardTitleInput.addEventListener('blur', confirmBoardTitle);
+boardTitleInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); confirmBoardTitle(); }
+  if (e.key === 'Escape') {
+    boardTitleInput.style.display = 'none';
+    boardTitleEl.style.display = '';
+  }
+});
+
+// ── リスト追加 ──
+showAddListBtn.addEventListener('click', () => {
+  showAddListBtn.style.display = 'none';
+  addListForm.style.display = 'flex';
+  newListTitleInput.value = '';
+  newListTitleInput.focus();
+});
+
+function hideAddListForm() {
+  addListForm.style.display = 'none';
+  showAddListBtn.style.display = '';
+}
+
+function confirmAddList() {
+  const title = newListTitleInput.value.trim();
+  if (!title) return;
+  createListColumn({ id: newId(), title, cards: [] });
+  newListTitleInput.value = '';
+  newListTitleInput.focus();
+}
+
+confirmAddListBtn.addEventListener('click', confirmAddList);
+cancelAddListBtn.addEventListener('click', hideAddListForm);
+newListTitleInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); confirmAddList(); }
+  if (e.key === 'Escape') hideAddListForm();
+});
+
+// ── リスト列生成 ──
+function createListColumn(listData) {
+  const col = document.createElement('div');
+  col.className = 'list-column';
+  col.dataset.listId = listData.id;
+
+  col.innerHTML = `
+    <div class="list-header">
+      <span class="list-title">${escHtml(listData.title)}</span>
+      <input class="list-title-input" type="text">
+      <button class="list-delete-btn" title="リストを削除">&#x2715;</button>
+    </div>
+    <div class="cards-container">
+      <div class="cards-empty">カードをここにドロップ</div>
+    </div>
+    <div class="add-card-form">
+      <input type="text" placeholder="タイトルを入力（必須）">
+      <textarea placeholder="説明（任意）"></textarea>
+      <div class="form-actions">
+        <button class="btn-primary add-card-confirm">追加</button>
+        <button class="btn-cancel add-card-cancel">&#x2715;</button>
+      </div>
+    </div>
+    <button class="add-card-btn">&#43; カードを追加</button>
+  `;
+
+  board.insertBefore(col, addListWrapper);
+
+  const titleSpan = col.querySelector('.list-title');
+  const titleInput = col.querySelector('.list-title-input');
+  const deleteBtn = col.querySelector('.list-delete-btn');
+  const cardsContainer = col.querySelector('.cards-container');
+  const emptyMsg = col.querySelector('.cards-empty');
+  const addCardBtn = col.querySelector('.add-card-btn');
+  const addCardForm = col.querySelector('.add-card-form');
+  const addCardTitleInput = addCardForm.querySelector('input');
+  const addCardDescInput = addCardForm.querySelector('textarea');
+  const addCardConfirm = col.querySelector('.add-card-confirm');
+  const addCardCancel = col.querySelector('.add-card-cancel');
+
+  // リストタイトル編集
+  titleSpan.addEventListener('click', () => {
+    titleInput.value = titleSpan.textContent;
+    titleSpan.style.display = 'none';
+    titleInput.style.display = 'block';
+    titleInput.focus();
+    titleInput.select();
+  });
+
+  function confirmListTitle() {
+    const v = titleInput.value.trim();
+    if (v) titleSpan.textContent = v;
+    titleInput.style.display = 'none';
+    titleSpan.style.display = '';
+  }
+
+  titleInput.addEventListener('blur', confirmListTitle);
+  titleInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); confirmListTitle(); }
+    if (e.key === 'Escape') { titleInput.style.display = 'none'; titleSpan.style.display = ''; }
+  });
+
+  // リスト削除
+  deleteBtn.addEventListener('click', () => col.remove());
+
+  // カード追加フォーム表示
+  addCardBtn.addEventListener('click', () => {
+    addCardBtn.style.display = 'none';
+    addCardForm.style.display = 'flex';
+    addCardTitleInput.value = '';
+    addCardDescInput.value = '';
+    addCardTitleInput.focus();
+  });
+
+  function hideAddCardForm() {
+    addCardForm.style.display = 'none';
+    addCardBtn.style.display = '';
+  }
+
+  function confirmAddCard() {
+    const title = addCardTitleInput.value.trim();
+    if (!title) return;
+    addCard(cardsContainer, emptyMsg, { id: newId(), title, desc: addCardDescInput.value.trim() });
+    addCardTitleInput.value = '';
+    addCardDescInput.value = '';
+    addCardTitleInput.focus();
+  }
+
+  addCardConfirm.addEventListener('click', confirmAddCard);
+  addCardCancel.addEventListener('click', hideAddCardForm);
+  addCardTitleInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); confirmAddCard(); }
+    if (e.key === 'Escape') hideAddCardForm();
+  });
+  addCardDescInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') hideAddCardForm();
+  });
+
+  // 初期カード
+  listData.cards.forEach(c => addCard(cardsContainer, emptyMsg, c));
+  updateEmpty(cardsContainer, emptyMsg);
+}
+
+// ── カード追加 ──
+function addCard(container, emptyMsg, cardData) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.cardId = cardData.id;
+
+  card.innerHTML = `
+    <div class="card-actions">
+      <button class="card-action-btn edit-btn" title="編集">&#x270F;&#xFE0F;</button>
+      <button class="card-action-btn delete-btn" title="削除">&#x1F5D1;&#xFE0F;</button>
+    </div>
+    <div class="card-view">
+      <div class="card-title">${escHtml(cardData.title)}</div>
+      ${cardData.desc ? `<div class="card-desc">${escHtml(cardData.desc)}</div>` : ''}
+    </div>
+    <div class="card-edit-form">
+      <input type="text" value="${escAttr(cardData.title)}" placeholder="タイトル（必須）">
+      <textarea placeholder="説明（任意）">${escHtml(cardData.desc)}</textarea>
+      <div class="card-edit-actions">
+        <button class="btn-primary save-btn">保存</button>
+        <button class="btn-cancel cancel-edit-btn">&#x2715;</button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(card);
+  updateEmpty(container, emptyMsg);
+
+  const cardView = card.querySelector('.card-view');
+  const cardEditForm = card.querySelector('.card-edit-form');
+  const cardTitleEl = card.querySelector('.card-title');
+  const cardDescEl = card.querySelector('.card-desc');
+  const editTitleInput = cardEditForm.querySelector('input');
+  const editDescInput = cardEditForm.querySelector('textarea');
+  const editBtn = card.querySelector('.edit-btn');
+  const deleteBtn = card.querySelector('.delete-btn');
+  const saveBtn = card.querySelector('.save-btn');
+  const cancelEditBtn = card.querySelector('.cancel-edit-btn');
+
+  // 削除
+  deleteBtn.addEventListener('click', () => {
+    card.remove();
+    updateEmpty(container, emptyMsg);
+  });
+
+  // 編集開始
+  editBtn.addEventListener('click', () => {
+    editTitleInput.value = cardTitleEl.textContent;
+    editDescInput.value = cardDescEl ? cardDescEl.textContent : '';
+    cardView.style.display = 'none';
+    card.querySelector('.card-actions').style.display = 'none';
+    cardEditForm.style.display = 'flex';
+    editTitleInput.focus();
+    editTitleInput.select();
+  });
+
+  function cancelEdit() {
+    cardEditForm.style.display = 'none';
+    cardView.style.display = '';
+    card.querySelector('.card-actions').style.display = '';
+  }
+
+  function saveEdit() {
+    const t = editTitleInput.value.trim();
+    if (!t) return;
+    cardTitleEl.textContent = t;
+    const desc = editDescInput.value.trim();
+    if (desc) {
+      if (cardDescEl) {
+        cardDescEl.textContent = desc;
+      } else {
+        const newDesc = document.createElement('div');
+        newDesc.className = 'card-desc';
+        newDesc.textContent = desc;
+        cardView.appendChild(newDesc);
+      }
+    } else if (cardDescEl) {
+      cardDescEl.textContent = '';
+    }
+    cancelEdit();
+  }
+
+  saveBtn.addEventListener('click', saveEdit);
+  cancelEditBtn.addEventListener('click', cancelEdit);
+  editTitleInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+    if (e.key === 'Escape') cancelEdit();
+  });
+  editDescInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') cancelEdit();
+  });
+}
+
+function updateEmpty(container, emptyMsg) {
+  const hasCards = container.querySelector('.card') !== null;
+  emptyMsg.style.display = hasCards ? 'none' : 'block';
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function escAttr(str) {
+  return String(str).replace(/"/g, '&quot;');
+}
+
+// ── 初期リスト生成 ──
+initialData.lists.forEach(createListColumn);
+</script>
+</body>
+</html>
