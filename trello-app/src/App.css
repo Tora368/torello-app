@@ -322,6 +322,87 @@ body {
   color: var(--danger);
 }
 
+/* ===== Sort Bar ===== */
+.list-sort-bar {
+  display: flex;
+  gap: 4px;
+  padding: 0 8px 6px;
+}
+
+.btn-sort {
+  flex: 1;
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid #c1c7d0;
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-sort:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ===== Card Badges ===== */
+.card-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.badge-priority {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.badge-due {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: #f0f1f4;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* ===== Card Meta (edit form) ===== */
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-meta-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.card-select,
+.card-date-input {
+  flex: 1;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid #c1c7d0;
+  border-radius: var(--border-radius);
+  outline: none;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.card-select:focus,
+.card-date-input:focus {
+  border-color: var(--accent);
+}
+
 /* ===== Add Card ===== */
 .add-card-btn {
   width: 100%;

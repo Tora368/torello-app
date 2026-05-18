@@ -40,7 +40,9 @@ export default function App() {
   const [activeCard, setActiveCard] = useState<Card | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor)
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
   );
 
   // --- Board ---
@@ -81,15 +83,43 @@ export default function App() {
       ),
     }));
 
-  const editCard = (listId: string, cardId: string, title: string, description: string) =>
+  const editCard = (listId: string, cardId: string, title: string, description: string, priority?: Card['priority'], dueDate?: string) =>
     setBoard(b => ({
       ...b,
       lists: b.lists.map(l =>
         l.id === listId
-          ? { ...l, cards: l.cards.map(c => c.id === cardId ? { ...c, title, description } : c) }
+          ? { ...l, cards: l.cards.map(c => c.id === cardId ? { ...c, title, description, priority, dueDate } : c) }
           : l
       ),
     }));
+
+  const sortListByPriority = (listId: string) => {
+    const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    setBoard(b => ({
+      ...b,
+      lists: b.lists.map(l => {
+        if (l.id !== listId) return l;
+        const sorted = [...l.cards].sort((a, b) => (order[a.priority ?? 'low'] ?? 2) - (order[b.priority ?? 'low'] ?? 2));
+        return { ...l, cards: sorted };
+      }),
+    }));
+  };
+
+  const sortListByDueDate = (listId: string) => {
+    setBoard(b => ({
+      ...b,
+      lists: b.lists.map(l => {
+        if (l.id !== listId) return l;
+        const sorted = [...l.cards].sort((a, b) => {
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return a.dueDate.localeCompare(b.dueDate);
+        });
+        return { ...l, cards: sorted };
+      }),
+    }));
+  };
 
   // --- Drag & Drop ---
   const findListByCardId = (cardId: string) =>
@@ -195,6 +225,8 @@ export default function App() {
               onAddCard={addCard}
               onDeleteCard={deleteCard}
               onEditCard={editCard}
+              onSortByPriority={sortListByPriority}
+              onSortByDueDate={sortListByDueDate}
             />
           ))}
 

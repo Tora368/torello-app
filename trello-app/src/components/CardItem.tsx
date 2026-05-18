@@ -7,13 +7,18 @@ interface Props {
   card: Card;
   listId: string;
   onDelete: (listId: string, cardId: string) => void;
-  onEdit: (listId: string, cardId: string, title: string, description: string) => void;
+  onEdit: (listId: string, cardId: string, title: string, description: string, priority?: Card['priority'], dueDate?: string) => void;
 }
+
+const PRIORITY_LABEL: Record<string, string> = { high: '高', medium: '中', low: '低' };
+const PRIORITY_COLOR: Record<string, string> = { high: '#de350b', medium: '#ff991f', low: '#36b37e' };
 
 export function CardItem({ card, listId, onDelete, onEdit }: Props) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description);
+  const [priority, setPriority] = useState<Card['priority']>(card.priority);
+  const [dueDate, setDueDate] = useState(card.dueDate ?? '');
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -28,9 +33,17 @@ export function CardItem({ card, listId, onDelete, onEdit }: Props) {
 
   const handleSave = () => {
     if (title.trim()) {
-      onEdit(listId, card.id, title.trim(), description.trim());
+      onEdit(listId, card.id, title.trim(), description.trim(), priority, dueDate || undefined);
       setEditing(false);
     }
+  };
+
+  const handleEditOpen = () => {
+    setTitle(card.title);
+    setDescription(card.description);
+    setPriority(card.priority);
+    setDueDate(card.dueDate ?? '');
+    setEditing(true);
   };
 
   if (editing) {
@@ -50,6 +63,28 @@ export function CardItem({ card, listId, onDelete, onEdit }: Props) {
           placeholder="説明（任意）"
           rows={3}
         />
+        <div className="card-meta-row">
+          <label className="card-meta-label">優先度</label>
+          <select
+            className="card-select"
+            value={priority ?? ''}
+            onChange={e => setPriority((e.target.value as Card['priority']) || undefined)}
+          >
+            <option value="">なし</option>
+            <option value="high">高</option>
+            <option value="medium">中</option>
+            <option value="low">低</option>
+          </select>
+        </div>
+        <div className="card-meta-row">
+          <label className="card-meta-label">期限</label>
+          <input
+            type="date"
+            className="card-date-input"
+            value={dueDate}
+            onChange={e => setDueDate(e.target.value)}
+          />
+        </div>
         <div className="card-actions">
           <button className="btn btn-primary btn-sm" onClick={handleSave}>保存</button>
           <button className="btn btn-ghost btn-sm" onClick={() => setEditing(false)}>キャンセル</button>
@@ -69,12 +104,22 @@ export function CardItem({ card, listId, onDelete, onEdit }: Props) {
       <div className="card-body">
         <p className="card-title">{card.title}</p>
         {card.description && <p className="card-description">{card.description}</p>}
+        <div className="card-badges">
+          {card.priority && (
+            <span className="badge-priority" style={{ background: PRIORITY_COLOR[card.priority] }}>
+              {PRIORITY_LABEL[card.priority]}
+            </span>
+          )}
+          {card.dueDate && (
+            <span className="badge-due">📅 {card.dueDate}</span>
+          )}
+        </div>
       </div>
       <div className="card-menu">
         <button
           className="btn-icon"
           onPointerDown={e => e.stopPropagation()}
-          onClick={() => setEditing(true)}
+          onClick={handleEditOpen}
           title="編集"
         >✏️</button>
         <button

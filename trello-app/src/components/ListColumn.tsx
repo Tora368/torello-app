@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
-import type { List } from '../types';
+import type { Card, List } from '../types';
 import { CardItem } from './CardItem';
 
 interface Props {
@@ -10,10 +10,12 @@ interface Props {
   onRenameList: (listId: string, title: string) => void;
   onAddCard: (listId: string, title: string, description: string) => void;
   onDeleteCard: (listId: string, cardId: string) => void;
-  onEditCard: (listId: string, cardId: string, title: string, description: string) => void;
+  onEditCard: (listId: string, cardId: string, title: string, description: string, priority?: Card['priority'], dueDate?: string) => void;
+  onSortByPriority: (listId: string) => void;
+  onSortByDueDate: (listId: string) => void;
 }
 
-export function ListColumn({ list, onDeleteList, onRenameList, onAddCard, onDeleteCard, onEditCard }: Props) {
+export function ListColumn({ list, onDeleteList, onRenameList, onAddCard, onDeleteCard, onEditCard, onSortByPriority, onSortByDueDate }: Props) {
   const [addingCard, setAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
   const [newCardDesc, setNewCardDesc] = useState('');
@@ -52,6 +54,10 @@ export function ListColumn({ list, onDeleteList, onRenameList, onAddCard, onDele
           <h3 className="list-title" onClick={() => setEditingTitle(true)}>{list.title}</h3>
         )}
         <button className="btn-icon danger" onClick={() => onDeleteList(list.id)} title="リストを削除">✕</button>
+      </div>
+      <div className="list-sort-bar">
+        <button className="btn-sort" onClick={() => onSortByPriority(list.id)} title="優先度順に並び替え">優先度順</button>
+        <button className="btn-sort" onClick={() => onSortByDueDate(list.id)} title="期限順に並び替え">期限順</button>
       </div>
 
       <SortableContext items={list.cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
