@@ -1,0 +1,53 @@
+name: Bug Report
+description: torello-app の不具合を報告する
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **すべての項目を記入してください。**
+        このイシューから修正ブランチ (`fix/issue-{N}-description`) を作成して対応すること。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 不具合の説明
+      description: 何が起きているかを説明してください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: |
+        1. 〇〇ページを開く
+        2. 〇〇ボタンをクリック
+        3. エラーが発生する
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 本来どうあるべきかを説明してください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際に何が起きているかを説明してください。
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 環境
+      placeholder: "ブラウザ, OS, Node.js バージョンなど"
+    validations:
+      required: false

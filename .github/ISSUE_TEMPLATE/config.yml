@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 質問・相談
+    url: https://github.com/Tora368/torello-app/discussions
+    about: バグ報告・機能追加以外の質問は Discussions をご利用ください。

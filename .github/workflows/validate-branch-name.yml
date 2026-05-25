@@ -1,0 +1,37 @@
+name: Validate Branch Name
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  validate-branch-name:
+    name: validate-branch-name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name convention
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch: $BRANCH"
+
+          # Allowed: feature/issue-{N}-{description} or fix/issue-{N}-{description}
+          if echo "$BRANCH" | grep -qE '^(feature|fix)/issue-[0-9]+(-[a-z0-9]+)+$'; then
+            echo "OK: Branch name is valid: $BRANCH"
+          else
+            echo "ERROR: Branch name '$BRANCH' does not follow the required convention."
+            echo ""
+            echo "Required format:"
+            echo "  feature/issue-{N}-short-description"
+            echo "  fix/issue-{N}-short-description"
+            echo ""
+            echo "Valid examples:"
+            echo "  feature/issue-12-add-login-page"
+            echo "  fix/issue-7-fix-card-drag-bug"
+            echo ""
+            echo "Rules:"
+            echo "  - Type must be 'feature' or 'fix'"
+            echo "  - Must include 'issue-' followed by an integer"
+            echo "  - Description uses lowercase letters, numbers, and hyphens only"
+            echo "  - No uppercase letters, underscores, or spaces"
+            exit 1
+          fi

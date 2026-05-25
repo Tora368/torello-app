@@ -48,6 +48,8 @@
       "Bash(node)"
     ],
     "deny": [
+      "Bash(git push origin master)",
+      "Bash(git push origin master *)",
       "Bash(rm *)",
       "Bash(rm -r *)",
       "Bash(rm -f *)",
