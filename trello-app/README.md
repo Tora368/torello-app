@@ -1,6 +1,38 @@
-# React + TypeScript + Vite
+# Trello 風タスク管理アプリ（フロント + API + PostgreSQL）
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## ローカル開発手順
+
+1. **PostgreSQL（Docker）** — リポジトリの `trello-app` で起動します。
+   ```bash
+   cd trello-app
+   docker compose up -d
+   ```
+   初回起動時に `backend/db/init.sql` が実行され、テーブルと既定ボード（ID `00000000-0000-0000-0000-000000000001`）が作成されます。
+
+2. **バックエンド** — 接続文字列は `backend/.env` で指定します（`.env.example` をコピー）。
+   ```bash
+   cd trello-app/backend
+   cp .env.example .env   # Windows: copy .env.example .env
+   npm install
+   npm run dev
+   ```
+   既定では API は `http://localhost:3001/api`（[要件定義書](./要件定義書.md) 12章）。
+
+3. **フロントエンド** — 任意で `frontend/.env` に API の URL を設定できます（未設定時は上記と同じ既定値）。
+   ```bash
+   cd trello-app/frontend
+   cp .env.example .env   # 任意
+   npm install
+   npm run dev
+   ```
+
+### Docker Compose の環境変数（任意）
+
+`docker-compose.yml` は `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` / `POSTGRES_PORT` を上書きできます。その場合は `backend/.env` の `DATABASE_URL` も同じ認証情報に合わせてください。
+
+---
+
+# React + TypeScript + Vite（テンプレート由来の説明）
 
 Currently, two official plugins are available:
 
