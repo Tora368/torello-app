@@ -27,6 +27,9 @@ export default function App() {
   const [editingBoardTitle, setEditingBoardTitle] = useState(false);
   const [boardTitleInput, setBoardTitleInput] = useState('');
   const [activeCard, setActiveCard] = useState<Card | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Board | null>(null);
+  const [searching, setSearching] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -45,6 +48,18 @@ export default function App() {
   }, []);
 
   useEffect(() => { fetchBoard(); }, [fetchBoard]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) { setSearchResults(null); return; }
+    const timer = setTimeout(() => {
+      setSearching(true);
+      boardApi.searchBoard(searchQuery.trim())
+        .then(setSearchResults)
+        .catch(() => setSearchResults(null))
+        .finally(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const updateBoardState = (updater: (b: Board) => Board) =>
     setBoard(prev => (prev ? updater(prev) : prev));
@@ -247,6 +262,21 @@ export default function App() {
             </h1>
           )}
         </div>
+        <div className="header-right">
+          <div className="search-bar">
+            <input
+              className="search-input"
+              type="search"
+              placeholder="カードを検索..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="search-clear" onClick={() => setSearchQuery('')}>✕</button>
+            )}
+          </div>
+          {searching && <span className="search-status">検索中...</span>}
+        </div>
       </header>
 
       <DndContext
@@ -257,7 +287,7 @@ export default function App() {
         onDragEnd={handleDragEnd}
       >
         <main className="board">
-          {board.lists.map(list => (
+          {(searchResults ? searchResults.lists : board.lists).map(list => (
             <ListColumn
               key={list.id}
               list={list}
@@ -271,29 +301,35 @@ export default function App() {
             />
           ))}
 
-          <div className="add-list-area">
-            {addingList ? (
-              <div className="add-list-form">
-                <input
-                  className="list-title-input"
-                  placeholder="リストのタイトル"
-                  value={newListTitle}
-                  onChange={e => setNewListTitle(e.target.value)}
-                  autoFocus
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') addList();
-                    if (e.key === 'Escape') setAddingList(false);
-                  }}
-                />
-                <div className="card-actions">
-                  <button className="btn btn-primary btn-sm" onClick={addList}>追加</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setAddingList(false)}>キャンセル</button>
+          {searchQuery.trim() && (searchResults?.lists.length ?? 0) === 0 && !searching && (
+            <div className="search-empty">「{searchQuery}」に一致するカードはありません</div>
+          )}
+
+          {!searchQuery.trim() && (
+            <div className="add-list-area">
+              {addingList ? (
+                <div className="add-list-form">
+                  <input
+                    className="list-title-input"
+                    placeholder="リストのタイトル"
+                    value={newListTitle}
+                    onChange={e => setNewListTitle(e.target.value)}
+                    autoFocus
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') addList();
+                      if (e.key === 'Escape') setAddingList(false);
+                    }}
+                  />
+                  <div className="card-actions">
+                    <button className="btn btn-primary btn-sm" onClick={addList}>追加</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setAddingList(false)}>キャンセル</button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <button className="add-list-btn" onClick={() => setAddingList(true)}>+ リストを追加</button>
-            )}
-          </div>
+              ) : (
+                <button className="add-list-btn" onClick={() => setAddingList(true)}>+ リストを追加</button>
+              )}
+            </div>
+          )}
         </main>
 
         <DragOverlay>

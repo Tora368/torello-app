@@ -12,4 +12,7 @@ export const boardApi = {
 
   addList: (title: string) =>
     api.post(`/boards/${BOARD_ID}/lists`, { title }).then(r => r.data),
+
+  searchBoard: (query: string) =>
+    api.get<Board>(`/boards/${BOARD_ID}/search`, { params: { q: query } }).then(r => r.data),
 };

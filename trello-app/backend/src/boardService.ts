@@ -111,6 +111,55 @@ export async function getBoard(pool: Pool, boardId: string): Promise<BoardJson |
   };
 }
 
+type SearchCardRow = CardRow & {
+  list_title: string;
+  list_position: number;
+  list_created_at: Date;
+};
+
+export async function searchBoard(pool: Pool, boardId: string, query: string): Promise<BoardJson | null> {
+  const br = await pool.query<{ id: string; title: string; created_at: Date }>(
+    'SELECT id, title, created_at FROM boards WHERE id = $1',
+    [boardId],
+  );
+  if (br.rows.length === 0) return null;
+  const board = br.rows[0];
+
+  const cr = await pool.query<SearchCardRow>(
+    `SELECT
+       c.id, c.list_id, c.title, c.description, c.position,
+       c.priority, c.due_date, c.created_at,
+       l.title AS list_title, l.position AS list_position, l.created_at AS list_created_at
+     FROM cards c
+     INNER JOIN lists l ON l.id = c.list_id
+     WHERE l.board_id = $1
+       AND (c.title ILIKE $2 OR c.description ILIKE $2)
+     ORDER BY l.position ASC, l.created_at ASC, c.position ASC, c.created_at ASC`,
+    [boardId, `%${query}%`],
+  );
+
+  const listsMap = new Map<string, ListJson>();
+  for (const row of cr.rows) {
+    if (!listsMap.has(row.list_id)) {
+      listsMap.set(row.list_id, {
+        id: row.list_id,
+        title: row.list_title,
+        position: row.list_position,
+        createdAt: row.list_created_at.toISOString(),
+        cards: [],
+      });
+    }
+    listsMap.get(row.list_id)!.cards.push(mapCard(row));
+  }
+
+  return {
+    id: board.id,
+    title: board.title,
+    createdAt: board.created_at.toISOString(),
+    lists: [...listsMap.values()],
+  };
+}
+
 export async function patchBoard(pool: Pool, boardId: string, title: string): Promise<BoardJson | null> {
   const r = await pool.query('UPDATE boards SET title = $1 WHERE id = $2 RETURNING id', [title, boardId]);
   if (r.rowCount === 0) return null;
