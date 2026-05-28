@@ -6,6 +6,13 @@
 
 ## バージョン一覧
 
+### 実行環境・ツール
+
+| 技術 | バージョン | 用途 |
+|------|----------|------|
+| Node.js | 24.15.0 | フロント・バックエンド共通の実行環境 |
+| npm | 11.12.1 | パッケージマネージャー |
+
 ### フロントエンド
 
 | 技術 | バージョン | 用途 |
@@ -17,26 +24,23 @@
 | @dnd-kit/sortable | 10.0.0 | ソータブルリスト |
 | @dnd-kit/utilities | 3.2.2 | DnDユーティリティ |
 | axios | 1.7.9 | HTTPクライアント |
-| Node.js | 18以上 | 実行環境（フロント開発用） |
 
 ### バックエンド
 
 | 技術 | バージョン | 用途 |
 |------|----------|------|
-| Java | 21 | 実行環境 |
-| Spring Boot | 3.3.5 | アプリケーションフレームワーク |
-| Spring Data JPA | (Spring Boot 管理) | ORM |
-| Hibernate | (Spring Boot 管理) | JPAプロバイダ |
-| Flyway | (Spring Boot 管理) | DBマイグレーション |
-| PostgreSQL driver | (Spring Boot 管理) | DBドライバ |
-| Lombok | (Spring Boot 管理) | ボイラープレート削減 |
-| Maven | 3.x | ビルドツール |
+| Express | 4.21.2 | Webフレームワーク |
+| TypeScript | 5.8.3 | 型付き言語 |
+| tsx | 4.19.4 | TypeScript 実行・ウォッチ（開発用） |
+| pg | 8.14.1 | PostgreSQL クライアント |
+| cors | 2.8.5 | CORSミドルウェア |
+| dotenv | 16.5.0 | 環境変数管理 |
 
 ### インフラ
 
 | 技術 | バージョン | 用途 |
 |------|----------|------|
-| PostgreSQL | 15以上 | データベース |
+| PostgreSQL | 16-alpine | データベース（Docker イメージ） |
 | Docker / Docker Compose | 任意 | PostgreSQL コンテナ起動 |
 
 ---
@@ -51,7 +55,7 @@
 
 ---
 
-## 2. 言語：TypeScript 6
+## 2. 言語：TypeScript
 
 | 観点 | 内容 |
 |------|------|
@@ -81,17 +85,17 @@
 
 ---
 
-## 5. バックエンド：Spring Boot 3.3.5（Java 21）
+## 5. バックエンド：Node.js + Express
 
 | 観点 | 内容 |
 |------|------|
-| 選定理由 | 企業採用率が高い本格的なJavaフレームワーク。REST API・DI・ORM・DBマイグレーションをひとつの環境で学べる |
-| 学習価値 | アノテーションベースのDI、JPAによるORM、Flywayによるスキーマ管理など実務直結のパターンを習得できる |
-| 代替案 | Node.js + Express（言語統一は容易だがJavaの学習機会がなくなる）、FastAPI（Pythonベース） |
+| 選定理由 | JavaScript/TypeScript で統一できるため、フロントエンド学習の延長でバックエンドを学べる。情報量が多く、スクールでの採用実績も多い |
+| 学習価値 | HTTPルーティング・ミドルウェア・REST API設計の基礎を習得できる |
+| 代替案 | Hono（軽量でモダンだが情報量が少ない）、Python + FastAPI（言語を切り替えるコストがある） |
 
 ---
 
-## 6. データベース：PostgreSQL
+## 6. データベース：PostgreSQL 16
 
 | 観点 | 内容 |
 |------|------|
