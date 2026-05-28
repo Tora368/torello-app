@@ -122,3 +122,27 @@ git branch --show-current
 - **Lint:** `npm run lint`
 - **型チェック:** `npx tsc`
 - **リポジトリ:** `Tora368/torello-app`
+
+---
+
+## 7. サーバー起動とポート管理
+
+サーバーを起動する際は **`/start-servers`** スキルを使うこと（`.claude/commands/start-servers.md`）。
+
+### 規定ポート（変更禁止）
+
+| サービス | ポート |
+|---------|-------|
+| Backend (Express) | **3001** |
+| Frontend (Vite) | **5173** |
+
+### 絶対ルール
+
+- 別ポートでの起動は**禁止**。フロントとバックの接続設定がずれて動作しない。
+- ポート競合時は既存プロセスを停止してから規定ポートで起動する。
+- 解放できない場合はユーザーに報告して判断を仰ぐ。
+
+### 環境変数
+
+- `trello-app/frontend/.env` → `VITE_API_BASE_URL=http://localhost:3001/api`
+- `trello-app/backend/.env` → `DATABASE_URL`, `PORT=3001`（`.env.example` からコピー）

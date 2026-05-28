@@ -11,6 +11,7 @@ import {
   patchCard,
   patchListPosition,
   patchListTitle,
+  searchBoard,
 } from './boardService.js';
 import { pool } from './db.js';
 
@@ -26,6 +27,14 @@ app.get('/api/boards/:id', async (req, res) => {
   const board = await getBoard(pool, req.params.id);
   if (!board) return res.status(404).json({ error: 'Board not found' });
   res.json(board);
+});
+
+app.get('/api/boards/:id/search', async (req, res) => {
+  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (!q) return res.status(400).json({ error: 'q is required' });
+  const result = await searchBoard(pool, req.params.id, q);
+  if (!result) return res.status(404).json({ error: 'Board not found' });
+  res.json(result);
 });
 
 app.patch('/api/boards/:id', async (req, res) => {
